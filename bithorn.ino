@@ -46,11 +46,6 @@ int32_t get_sound_data(Channels* data, int32_t len) {
   return result_len;
 }
 
-// callback to provide silence
-int32_t get_silence (Channels* data, int32_t len) {
-  return 0;
-}
-
 // Arduino Setup
 void setup(void) {
   Serial.begin(115200);
