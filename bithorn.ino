@@ -14,22 +14,22 @@ const char* horn_file_name = "/horn.raw";
 const char* silence_file_name = "/silence.raw";
 
 const int frame_size_bytes = sizeof(int16_t) * 2;
-const int musicButton = 4;
+const int music_button = 4;
 const int bit3 = 26;
 const int bit2 = 27;
 const int bit1 = 14;
 const int bit0 = 12;
 
-String trackFileName = "";
-int trackNumber;
-bool isMusicPlaying = false;
-bool musicButtonPressed = false;
+String track_file_name = "";
+int track_number;
+bool is_music_playing = false;
+bool music_button_pressed = false;
 
-int musicButtonState = HIGH;
-int lastMusicButtonState = HIGH;
+int music_button_state = HIGH;
+int last_music_button_state = HIGH;
 
-unsigned long lastDebounceTime = 0;
-unsigned long debounceDelay = 50;
+unsigned long last_debounce_time = 0;
+unsigned long debounce_delay = 50;
 
 // callback used by A2DP to provide the sound data
 int32_t get_sound_data(Channels* data, int32_t len) {
@@ -38,9 +38,9 @@ int32_t get_sound_data(Channels* data, int32_t len) {
 
   // if sound data is being sent, music is playing
   if (result_len > 0) {
-    isMusicPlaying = true;
+    is_music_playing = true;
   } else {
-    isMusicPlaying = false;
+    is_music_playing = false;
   }
 
   return result_len;
@@ -52,7 +52,7 @@ void setup(void) {
 
   SD.begin(sd_ss_pin);
 
-  pinMode(musicButton, INPUT_PULLUP);
+  pinMode(music_button, INPUT_PULLUP);
 
   pinMode(bit3, INPUT_PULLUP);
   pinMode(bit2, INPUT_PULLUP);
@@ -68,23 +68,23 @@ void setup(void) {
 // Arduino loop - repeated processing
 void loop() {
 
-  int musicButtonReading = digitalRead(musicButton);
+  int music_button_reading = digitalRead(music_button);
 
   // If the switch changed, due to noise or pressing:
-  if (musicButtonReading != lastMusicButtonState) {
+  if (music_button_reading != last_music_button_state) {
     // reset the debouncing timer
-    lastDebounceTime = millis();
+    last_debounce_time = millis();
   }
 
-  if ((millis() - lastDebounceTime) > debounceDelay) {
+  if ((millis() - last_debounce_time) > debounce_delay) {
     // whatever the reading is at, it's been there for longer than the debounce
     // delay, so take it as the actual current state:
 
     // if the button state has changed:
-    if (musicButtonReading != musicButtonState) {
-      musicButtonState = musicButtonReading;
-      if (musicButtonState == HIGH) {
-        musicButtonPressed = true;
+    if (music_button_reading != music_button_state) {
+      music_button_state = music_button_reading;
+      if (music_button_state == HIGH) {
+        music_button_pressed = true;
       }
     }
   }
@@ -98,33 +98,33 @@ void loop() {
   Serial.println();
 
   Serial.print("MUSIC BUTTON STATE: ");
-  Serial.print(musicButtonState);
+  Serial.print(music_button_state);
   Serial.println();
 #endif
 
   // set the track name based on toggle switch inputs
-  trackNumber = digitalRead(bit3)*8 + digitalRead(bit2)*4 + digitalRead(bit1)*2 + digitalRead(bit0);
-  trackFileName = "/" + String(trackNumber) + ".raw";
+  track_number = digitalRead(bit3)*8 + digitalRead(bit2)*4 + digitalRead(bit1)*2 + digitalRead(bit0);
+  track_file_name = "/" + String(track_number) + ".raw";
 
 #ifdef DEBUG
   Serial.print("TRACK FILE NAME: ");
-  Serial.println(trackFileName);
+  Serial.println(track_file_name);
 #endif
 
   // if music is not playing yet, play on button press
-  if (musicButtonPressed && !isMusicPlaying) {
-    sound_file = SD.open(trackFileName, FILE_READ);
+  if (music_button_pressed && !is_music_playing) {
+    sound_file = SD.open(track_file_name, FILE_READ);
     a2dp_source.start("OontZ Angle 3 DS 7A9", get_sound_data);
-    musicButtonPressed = false;
+    music_button_pressed = false;
   }
 
   // if music is already playing silence it
-  if (musicButtonPressed && isMusicPlaying) {
+  if (music_button_pressed && is_music_playing) {
     sound_file = SD.open(silence_file_name, FILE_READ);
-    musicButtonPressed = false;
+    music_button_pressed = false;
   }
 
-  lastMusicButtonState = musicButtonReading;
+  last_music_button_state = music_button_reading;
 
-  musicButtonPressed = false;
+  music_button_pressed = false;
 }
