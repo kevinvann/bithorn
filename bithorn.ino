@@ -11,7 +11,7 @@ const int sd_ss_pin = 5;
 // sd card must have these files or code will error out
 const char* ready_file_name = "/ready.raw";
 const char* horn_file_name = "/horn.raw";
-const char* silence_file_name = "/silence.raw"
+const char* silence_file_name = "/silence.raw";
 
 const int frame_size_bytes = sizeof(int16_t) * 2;
 const int musicButton = 4;
