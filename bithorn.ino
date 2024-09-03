@@ -1,7 +1,7 @@
 #include "BluetoothA2DPSource.h"
 #include <SPI.h>
 #include <SD.h>
-#define DEBUG
+// #define DEBUG
 using namespace std;
 
 BluetoothA2DPSource a2dp_source;
@@ -35,7 +35,20 @@ unsigned long debounceDelay = 50;
 int32_t get_sound_data(Channels* data, int32_t len) {
   size_t result_len_bytes = sound_file.read((uint8_t*)data, len * frame_size_bytes);
   int32_t result_len = result_len_bytes / frame_size_bytes;
+
+  // if sound data is being sent, music is playing
+  if (result_len > 0) {
+    isMusicPlaying = true;
+  } else {
+    isMusicPlaying = false;
+  }
+
   return result_len;
+}
+
+// callback to provide silence
+int32_t get_silence (Channels* data, int32_t len) {
+  return 0;
 }
 
 // Arduino Setup
@@ -107,15 +120,12 @@ void loop() {
   if (musicButtonPressed && !isMusicPlaying) {
     sound_file = SD.open(trackFileName, FILE_READ);
     a2dp_source.start("OontZ Angle 3 DS 7A9", get_sound_data);
-    isMusicPlaying = true;
     musicButtonPressed = false;
   }
 
   // if music is already playing silence it
   if (musicButtonPressed && isMusicPlaying) {
     sound_file = SD.open(silence_file_name, FILE_READ);
-    a2dp_source.start("OontZ Angle 3 DS 7A9", get_sound_data);
-    isMusicPlaying = false;
     musicButtonPressed = false;
   }
 
