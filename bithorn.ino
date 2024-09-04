@@ -15,10 +15,14 @@ const char* silence_file_name = "/silence.raw";
 
 const int frame_size_bytes = sizeof(int16_t) * 2;
 const int music_button = 4;
-const int bit3 = 26;
-const int bit2 = 27;
-const int bit1 = 14;
-const int bit0 = 12;
+const int input_bit_3 = 27;
+const int input_bit_2 = 14;
+const int input_bit_1 = 12;
+const int input_bit_0 = 13;
+const int led_bit_3 = 32;
+const int led_bit_2 = 33;
+const int led_bit_1 = 25;
+const int led_bit_0 = 26;
 
 String track_file_name = "";
 int track_number;
@@ -54,10 +58,14 @@ void setup(void) {
 
   pinMode(music_button, INPUT_PULLUP);
 
-  pinMode(bit3, INPUT_PULLUP);
-  pinMode(bit2, INPUT_PULLUP);
-  pinMode(bit1, INPUT_PULLUP);
-  pinMode(bit0, INPUT_PULLUP);
+  pinMode(input_bit_3, INPUT_PULLUP);
+  pinMode(input_bit_2, INPUT_PULLUP);
+  pinMode(input_bit_1, INPUT_PULLUP);
+  pinMode(input_bit_0, INPUT_PULLUP);
+  pinMode(led_bit_3, OUTPUT);
+  pinMode(led_bit_2, OUTPUT);
+  pinMode(led_bit_1, OUTPUT);
+  pinMode(led_bit_0, OUTPUT);
   pinMode(2, OUTPUT);
 
   sound_file = SD.open(ready_file_name, FILE_READ);
@@ -68,7 +76,27 @@ void setup(void) {
 // Arduino loop - repeated processing
 void loop() {
 
+  // read inputs
   int music_button_reading = digitalRead(music_button);
+  int input_bit_3_reading = digitalRead(input_bit_3);
+  int input_bit_2_reading = digitalRead(input_bit_2);
+  int input_bit_1_reading = digitalRead(input_bit_1);
+  int input_bit_0_reading = digitalRead(input_bit_0);
+
+  
+  // light onboard LED if bluetooth is connected
+  if (a2dp_source.get_connection_state() == 2) {
+    digitalWrite(2, HIGH);
+  } else {
+    digitalWrite(2, LOW);
+  }
+
+  digitalWrite(led_bit_3, input_bit_3_reading);
+  digitalWrite(led_bit_2, input_bit_2_reading);
+  digitalWrite(led_bit_1, input_bit_1_reading);
+  digitalWrite(led_bit_0, input_bit_0_reading);
+
+
 
   // If the switch changed, due to noise or pressing:
   if (music_button_reading != last_music_button_state) {
@@ -89,27 +117,10 @@ void loop() {
     }
   }
 
-#ifdef DEBUG
-  Serial.print("BIT READING: ");
-  Serial.print(digitalRead(bit3));
-  Serial.print(digitalRead(bit2));
-  Serial.print(digitalRead(bit1));
-  Serial.print(digitalRead(bit0));
-  Serial.println();
-
-  Serial.print("MUSIC BUTTON STATE: ");
-  Serial.print(music_button_state);
-  Serial.println();
-#endif
-
   // set the track name based on toggle switch inputs
-  track_number = digitalRead(bit3)*8 + digitalRead(bit2)*4 + digitalRead(bit1)*2 + digitalRead(bit0);
+  track_number = input_bit_3_reading*8 + input_bit_2_reading*4 + input_bit_1_reading*2 + input_bit_0_reading;
   track_file_name = "/" + String(track_number) + ".raw";
 
-#ifdef DEBUG
-  Serial.print("TRACK FILE NAME: ");
-  Serial.println(track_file_name);
-#endif
 
   // if music is not playing yet, play on button press
   if (music_button_pressed && !is_music_playing) {
@@ -117,6 +128,7 @@ void loop() {
     a2dp_source.start("OontZ Angle 3 DS 7A9", get_sound_data);
     music_button_pressed = false;
   }
+
 
   // if music is already playing silence it
   if (music_button_pressed && is_music_playing) {
