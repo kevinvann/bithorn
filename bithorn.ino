@@ -25,6 +25,10 @@ const int led_bit_3 = 32;
 const int led_bit_2 = 33;
 const int led_bit_1 = 25;
 const int led_bit_0 = 26;
+const int led_bit_0_on = 22;
+const int led_bit_1_on = 1;
+const int led_bit_2_on = 3;
+const int led_bit_3_on = 21;
 
 String track_file_name = "";
 int track_number;
@@ -74,6 +78,10 @@ void setup(void) {
   pinMode(led_bit_2, OUTPUT);
   pinMode(led_bit_1, OUTPUT);
   pinMode(led_bit_0, OUTPUT);
+  pinMode(led_bit_3_on, OUTPUT);
+  pinMode(led_bit_2_on, OUTPUT);
+  pinMode(led_bit_1_on, OUTPUT);
+  pinMode(led_bit_0_on, OUTPUT);
   pinMode(2, OUTPUT);
 
   sound_file = SD.open(ready_file_name, FILE_READ);
@@ -119,6 +127,10 @@ void loop() {
   digitalWrite(led_bit_2, input_bit_2_reading);
   digitalWrite(led_bit_1, input_bit_1_reading);
   digitalWrite(led_bit_0, input_bit_0_reading);
+  digitalWrite(led_bit_3_on, !input_bit_3_reading);
+  digitalWrite(led_bit_2_on, !input_bit_2_reading);
+  digitalWrite(led_bit_1_on, !input_bit_1_reading);
+  digitalWrite(led_bit_0_on, !input_bit_0_reading);
 
   // set the track name based on toggle switch inputs
   track_number = input_bit_3_reading*8 + input_bit_2_reading*4 + input_bit_1_reading*2 + input_bit_0_reading;
