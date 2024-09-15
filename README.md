@@ -12,8 +12,4 @@ https://github.com/greiman/SdFat
 
 https://github.com/wkoch/Debounce
 
-https://github.com/bblanchon/ArduinoJson
-
-https://github.com/arkhipenko/TaskScheduler
-
-https://github.com/me-no-dev/AsyncTCP
+https://github.com/yoursunny/WifiEspNow
