@@ -59,8 +59,6 @@ int32_t get_sound_data(Channels* data, int32_t len) {
   size_t result_len_bytes = sound_file.read((uint8_t*)data, len * frame_size_bytes);
   int32_t result_len = result_len_bytes / frame_size_bytes;
 
-  Serial.println(result_len_bytes);
-
   // if there is sound data, music is playing
   is_music_playing = result_len > 0;
 
@@ -130,7 +128,7 @@ void loop() {
     digitalWrite(led_bit_2_on, !input_bit_2_state);
     digitalWrite(led_bit_1_on, !input_bit_1_state);
     digitalWrite(led_bit_0_on, !input_bit_0_state);
-    track_number = input_bit_3_state*8 + input_bit_2_state*4 + input_bit_1_state*2 + input_bit_0_state;
+    track_number = input_bit_3_state * 8 + input_bit_2_state * 4 + input_bit_1_state * 2 + input_bit_0_state;
     track_file_name = "/" + String(track_number) + ".raw";
   }
 
