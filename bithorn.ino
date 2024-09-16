@@ -2,8 +2,6 @@
 #include <SPI.h>
 #include <SD.h>
 #include <Debounce.h>
-// #define DEBUG
-using namespace std;
 
 BluetoothA2DPSource a2dp_source;
 File sound_file;
@@ -36,14 +34,24 @@ bool is_music_playing = false;
 bool music_button_released = false;
 bool horn_button_pressed = false;
 bool horn_button_released = false;
+bool first_loop = true;
 
 int music_button_state = LOW;
-int horn_button_state = LOW;
+int horn_button_state = HIGH;
+
+int input_bit_3_state;
+int input_bit_2_state;
+int input_bit_1_state;
+int input_bit_0_state;
+
+int last_input_bit_3_state;
+int last_input_bit_2_state;
+int last_input_bit_1_state;
+int last_input_bit_0_state;
 
 int last_music_button_state = LOW;
-int last_horn_button_state = LOW;
+int last_horn_button_state = HIGH;
 
-Debounce horn_button(horn_button_pin, 50, true);
 Debounce music_button(music_button_pin, 50, true);
 
 // callback used by A2DP to provide the sound data
@@ -51,12 +59,10 @@ int32_t get_sound_data(Channels* data, int32_t len) {
   size_t result_len_bytes = sound_file.read((uint8_t*)data, len * frame_size_bytes);
   int32_t result_len = result_len_bytes / frame_size_bytes;
 
+  Serial.println(result_len_bytes);
+
   // if there is sound data, music is playing
-  if (result_len > 0) {
-    is_music_playing = true;
-  } else {
-    is_music_playing = false;
-  }
+  is_music_playing = result_len > 0;
 
   return result_len;
 }
@@ -92,14 +98,18 @@ void setup(void) {
 void loop() {
 
   music_button_state = music_button.read();
-  horn_button_state = horn_button.read();
+  horn_button_state = digitalRead(horn_button_pin);
+  input_bit_3_state = digitalRead(input_bit_3);
+  input_bit_2_state = digitalRead(input_bit_2);
+  input_bit_1_state = digitalRead(input_bit_1);
+  input_bit_0_state = digitalRead(input_bit_0);
+
 
   if (horn_button_state != last_horn_button_state) {
-    if (horn_button_state == HIGH) {
-      Serial.println("HORN BUTTON PRESSED");
+    if (horn_button_state == LOW) {
       horn_button_pressed = true;
     }
-    if (horn_button_state == LOW) {
+    if (horn_button_state == HIGH) {
       horn_button_released = true;
     }
   }
@@ -110,32 +120,19 @@ void loop() {
     }
   }
 
-  // read inputs
-  int input_bit_3_reading = digitalRead(input_bit_3);
-  int input_bit_2_reading = digitalRead(input_bit_2);
-  int input_bit_1_reading = digitalRead(input_bit_1);
-  int input_bit_0_reading = digitalRead(input_bit_0);
-
-  // light onboard LED if bluetooth is connected
-  if (a2dp_source.get_connection_state() == 2) {
-    digitalWrite(2, HIGH);
-  } else {
-    digitalWrite(2, LOW);
+  // if the state of the toggle switch changes arm the track name and adjust leds
+  if (first_loop || input_bit_3_state != last_input_bit_3_state || input_bit_2_state != last_input_bit_2_state || input_bit_1_state != last_input_bit_1_state || input_bit_0_state != last_input_bit_0_state) {
+    digitalWrite(led_bit_3, input_bit_3_state);
+    digitalWrite(led_bit_2, input_bit_2_state);
+    digitalWrite(led_bit_1, input_bit_1_state);
+    digitalWrite(led_bit_0, input_bit_0_state);
+    digitalWrite(led_bit_3_on, !input_bit_3_state);
+    digitalWrite(led_bit_2_on, !input_bit_2_state);
+    digitalWrite(led_bit_1_on, !input_bit_1_state);
+    digitalWrite(led_bit_0_on, !input_bit_0_state);
+    track_number = input_bit_3_state*8 + input_bit_2_state*4 + input_bit_1_state*2 + input_bit_0_state;
+    track_file_name = "/" + String(track_number) + ".raw";
   }
-
-  digitalWrite(led_bit_3, input_bit_3_reading);
-  digitalWrite(led_bit_2, input_bit_2_reading);
-  digitalWrite(led_bit_1, input_bit_1_reading);
-  digitalWrite(led_bit_0, input_bit_0_reading);
-  digitalWrite(led_bit_3_on, !input_bit_3_reading);
-  digitalWrite(led_bit_2_on, !input_bit_2_reading);
-  digitalWrite(led_bit_1_on, !input_bit_1_reading);
-  digitalWrite(led_bit_0_on, !input_bit_0_reading);
-
-  // set the track name based on toggle switch inputs
-  track_number = input_bit_3_reading*8 + input_bit_2_reading*4 + input_bit_1_reading*2 + input_bit_0_reading;
-  track_file_name = "/" + String(track_number) + ".raw";
-
 
   // if the music is not yet playing and the button is pressed, play music
   if (music_button_released && !is_music_playing) {
@@ -162,4 +159,9 @@ void loop() {
   horn_button_released = false;
   last_music_button_state = music_button_state;
   last_horn_button_state = horn_button_state;
+  last_input_bit_3_state = input_bit_3_state;
+  last_input_bit_2_state = input_bit_2_state;
+  last_input_bit_1_state = input_bit_1_state;
+  last_input_bit_0_state = input_bit_0_state;
+  first_loop = false;
 }
