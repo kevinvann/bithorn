@@ -52,6 +52,11 @@ int last_input_bit_0_state;
 int last_music_button_state = LOW;
 int last_horn_button_state = HIGH;
 
+std::vector<const char*> bluetooth_names = {
+        "OontZ Angle 3 DS 7A9",
+        "OontZ Angle 3 DS E0E"
+};
+
 Debounce music_button(music_button_pin, 50, true);
 
 // callback used by A2DP to provide the sound data
@@ -89,8 +94,8 @@ void setup(void) {
   pinMode(2, OUTPUT);
 
   sound_file = SD.open(ready_file_name, FILE_READ);
-  a2dp_source.set_volume(30);
-  a2dp_source.start("OontZ Angle 3 DS 7A9", get_sound_data);
+  a2dp_source.set_volume(100);
+  a2dp_source.start(bluetooth_names, get_sound_data);
 }
 
 void loop() {
